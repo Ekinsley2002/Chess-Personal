@@ -1,10 +1,21 @@
 # main.py
 
 import pygame
+import sys
 from SubProcess import ChessEngine
 
 # Initialize pygame
-pygame.init()
+try:
+    pygame.init()
+    print("Pygame initialized successfully.")
+except pygame.error as e:
+    print(f"Pygame initialization failed: {e}")
+    sys.exit(1)
+
+# Check if video subsystem is initialized
+if not pygame.get_init():
+    print("Pygame failed to initialize all subsystems.")
+    sys.exit(1)
 
 # Define constants
 WIDTH, HEIGHT = 800, 800  # Window size
@@ -41,16 +52,25 @@ PIECE_IMAGES = {}
 PIECE_NAMES = ['wp', 'wr', 'wn', 'wb', 'wq', 'wk', 'bp', 'br', 'bn', 'bb', 'bq', 'bk']
 for piece in PIECE_NAMES:
     try:
+        image_path = f'images/pieces/{piece}.png'
         PIECE_IMAGES[piece] = pygame.transform.scale(
-            pygame.image.load(f'images/pieces/{piece}.png'),
+            pygame.image.load(image_path),
             (SQUARE_SIZE, SQUARE_SIZE)
         )
+        print(f"Loaded image for {piece} from {image_path}.")
     except pygame.error as e:
         print(f"Error loading image for {piece}: {e}")
+        PIECE_IMAGES[piece] = None  # Set to None or a placeholder
 
 # Initialize the window
-WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('Chess')
+try:
+    WIN = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption('Chess')
+    print("Pygame window created successfully.")
+except pygame.error as e:
+    print(f"Failed to create Pygame window: {e}")
+    pygame.quit()
+    sys.exit(1)
 
 selected_piece = None  # Track the selected piece
 move_from = None  # The starting square (row, col)
@@ -97,10 +117,14 @@ def draw_pieces(win, board, sides):
                     pygame_piece = C_PIECE_TO_PYGAME.get(piece.lower(), '--')  # Get black piece
 
             if pygame_piece != '--':  # If it's not an empty square
-                try:
-                    win.blit(PIECE_IMAGES[pygame_piece], (col * SQUARE_SIZE, row * SQUARE_SIZE))
-                except KeyError:
-                    print(f"Image for piece '{pygame_piece}' not found.")
+                image = PIECE_IMAGES.get(pygame_piece)
+                if image:
+                    try:
+                        win.blit(image, (col * SQUARE_SIZE, row * SQUARE_SIZE))
+                    except Exception as e:
+                        print(f"Error blitting image for piece '{pygame_piece}': {e}")
+                else:
+                    print(f"No image found for piece '{pygame_piece}'.")
 
 # Function to convert pixel coordinates to board coordinates (row, col)
 def get_board_pos(x, y):
@@ -213,5 +237,7 @@ if __name__ == "__main__":
                 print(" ".join(row))
 
             main(chess_board, chess_sides, chess_highlights, c_engine)
+        else:
+            print("Failed to receive initial board data.")
     finally:
         c_engine.close()

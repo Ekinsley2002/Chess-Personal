@@ -24,23 +24,13 @@ class ChessEngine:
         self.output_thread.daemon = True
         self.output_thread.start()
 
-        # Send the initial '3' to start the C program
-        self.send_initial_input()
-
-    def send_initial_input(self):
-        try:
-            initial_input = '3\n'
-            print(f"Sending initial input to C: {initial_input.strip()}")
-            self.process.stdin.write(initial_input)
-            self.process.stdin.flush()
-        except Exception as e:
-            print(f"Error sending initial input: {e}")
-
     def _read_output(self):
         while True:
             line = self.process.stdout.readline()
             if line == '':
+                print("C program has terminated.")
                 break  # Subprocess has terminated
+            print(f"C Output: {line.strip()}")  # Debugging
             self.output_queue.put(line.strip())
 
     def _get_output(self, expected_lines=24):
@@ -82,17 +72,16 @@ class ChessEngine:
 
     def select_piece(self, row, col):
         try:
-            # **Swap the order: send 'col row' instead of 'row col'**
-            selection_input = f'{col} {row}\n'
+            # Send 'row col' instead of 'col row'
+            selection_input = f'{row} {col}\n'
             print(f"Selecting piece at: {selection_input.strip()}")
             self.process.stdin.write(selection_input)
             self.process.stdin.flush()
 
-            # Expect two sets of outputs: with highlights and without
+            # Expect one set of outputs: with highlights
             first_output = self._get_output(24)
-            second_output = self._get_output(24)
 
-            if len(first_output) < 24 or len(second_output) < 24:
+            if len(first_output) < 24:
                 print("Incomplete board data received after selection.")
                 return None, None, None
 
@@ -113,9 +102,9 @@ class ChessEngine:
 
     def move_piece(self, end_row, end_col):
         try:
-            # **Swap the order: send 'col row' instead of 'row col'**
-            move_input = f'{end_col} {end_row}\n'
-            print(f"Moving piece to ({end_col}, {end_row})")
+            # Send 'end_row end_col' instead of 'end_col end_row'
+            move_input = f'{end_row} {end_col}\n'
+            print(f"Moving piece to ({end_row}, {end_col})")
             self.process.stdin.write(move_input)
             self.process.stdin.flush()
 
