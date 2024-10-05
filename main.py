@@ -1,21 +1,10 @@
 # main.py
 
 import pygame
-import sys
 from SubProcess import ChessEngine
 
 # Initialize pygame
-try:
-    pygame.init()
-    print("Pygame initialized successfully.")
-except pygame.error as e:
-    print(f"Pygame initialization failed: {e}")
-    sys.exit(1)
-
-# Check if video subsystem is initialized
-if not pygame.get_init():
-    print("Pygame failed to initialize all subsystems.")
-    sys.exit(1)
+pygame.init()
 
 # Define constants
 WIDTH, HEIGHT = 800, 800  # Window size
@@ -52,25 +41,17 @@ PIECE_IMAGES = {}
 PIECE_NAMES = ['wp', 'wr', 'wn', 'wb', 'wq', 'wk', 'bp', 'br', 'bn', 'bb', 'bq', 'bk']
 for piece in PIECE_NAMES:
     try:
-        image_path = f'images/pieces/{piece}.png'
         PIECE_IMAGES[piece] = pygame.transform.scale(
-            pygame.image.load(image_path),
+            pygame.image.load(f'images/pieces/{piece}.png'),
             (SQUARE_SIZE, SQUARE_SIZE)
         )
-        print(f"Loaded image for {piece} from {image_path}.")
     except pygame.error as e:
         print(f"Error loading image for {piece}: {e}")
         PIECE_IMAGES[piece] = None  # Set to None or a placeholder
 
 # Initialize the window
-try:
-    WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption('Chess')
-    print("Pygame window created successfully.")
-except pygame.error as e:
-    print(f"Failed to create Pygame window: {e}")
-    pygame.quit()
-    sys.exit(1)
+WIN = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption('Chess')
 
 selected_piece = None  # Track the selected piece
 move_from = None  # The starting square (row, col)
@@ -217,7 +198,6 @@ def main(chess_board, chess_sides, chess_highlights, c_engine):
         pygame.display.update()
 
     pygame.quit()
-
 
 if __name__ == "__main__":
     c_engine = ChessEngine('./chess.exe')
